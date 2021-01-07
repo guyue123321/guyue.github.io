@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <style type="text/css">
+        img {
+            width: 100px;
+            height: 100px;
+        }
+
+        .header {
+            width: 1903px;
+            height: 48px;
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .banxin {
+            width: 1200px;
+            height: 48px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            float: left;
+            width: 108px;
+            height: 24px;
+
+        }
+
+        .logo_tu {
+            float: left;
+            width: 108px;
+            height: 24px;
+            margin-top: 12px;
+        }
+
+        .shu {
+            float: left;
+            width: 1px;
+            height: 20px;
+            vertical-align: middle;
+            background: rgba(0, 0, 0, 0.2);
+            margin: 14px 16px;
+        }
+
+        .huawei {
+            float: left;
+            color: #191919;
+            font-size: 16px;
+            font-weight: 700;
+            margin: 0;
+            float: left;
+            margin-top: 16px;
+        }
+        .cont {
+            width: 1000px;
+            margin: 30px auto;
+            border: 1px solid black;
+            overflow: hidden;
+        }
+        .cont .goods {
+            width: 250px;
+            float: left;
+            border: 1px solid black;
+            box-sizing: border-box;
+            text-align: center;
+        }
+        .goods img {
+            width: 80%;
+        }
+        .goods span {
+            display: block;
+            margin: 10px 0;
+        }
+        .goods p {
+            height: 40px;
+            line-height: 20px;
+            overflow: hidden;
+        }
+
+        .goods input {
+            display: block;
+            margin: 0 auto;
+            font-size: 20px;
+        }
+
+        img {
+            width: 100px;
+            height: 100px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 头部 -->
+    <div class="header">
+        <div class="banxin">
+            <div class="logo">
+                <img src="https://id1.cloud.huawei.com/CAS/up/idmw_rss_61/logos/HUAWEI.svg" class="logo_tu" alt="">
+            </div>
+            <div>
+                <b class="shu"></b>
+                <b class="huawei"><a href="./xq.html">华为商城</a> </b>
+            </div>
+        </div>
+    </div>
+    <h2>这是购物车&nbsp;&nbsp;&nbsp;<a href="./xq.html">点击返回商城</a></h2>
+    <table border=1 width=800px align="center">
+        <thead>
+            <tr>
+                <th>图片</th>
+                <th>名字</th>
+                <th>单价</th>
+                <th>数量</th>
+                <th>总价</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+</body>
+<script type="text/javascript">
+    class Car {
+        //1.构造函数
+        constructor() {
+            this.tBody = document.querySelector("tbody");
+        }
+        //2.从本地存储中拿到数据,准备在购物车页面显示
+        getData() {
+            //2.1立即拿到数据
+            if (localStorage.getItem("goodsMsg")) {
+                //2.2把其变为json对象格式,方便于调用其中的属性
+                this.gm = JSON.parse(localStorage.getItem("goodsMsg"));
+            }
+            else {
+                this.gm = [];
+            }
+            //3.准备渲染页面
+            this.display();
+        }
+        display() {
+            //3.1 准备一个空字符串
+            var str = "";
+            //3.2把数据填入字符串中,准备放到页面上
+            for (var i = 0; i < this.gm.length; i++) {
+                str += `<tr index="${this.gm[i].goodsId}">
+                            <td><img src="${this.gm[i].msg.img}" alt=""></td>
+                            <td>${this.gm[i].msg.name}</td>
+                            <td>${this.gm[i].msg.price}</td>
+                            <td><input type="number" min="1" value="${this.gm[i].num}" class="number"></td>
+                            <td>${this.gm[i].msg.price * this.gm[i].num}</td>
+                            <td class="delete">删除</td>
+                        </tr>`;
+            }
+            //3.3渲染	
+            this.tBody.innerHTML = str;
+        }
+        //事件绑定
+        addEvent() {
+            var that = this;
+            //4.删除功能
+            //4.1因为我们一开始在html中并没有删除,所以需要用到事件委托
+            this.tBody.onclick = function (eve) {
+                var e = eve || window.event;
+                var tar = e.target || e.srcElement;
+                if (tar.className == "delete") {
+                    // 4.2先获取当前点击删除按钮的商品的id
+                    that.id = tar.parentNode.getAttribute("index");
+                    //4.3删除对应DOM元素
+                    tar.parentNode.remove();
+                    //4.5删除对应存储在本地的数据
+                    that.changeData(function (i) {
+                        that.gm.splice(i, 1);
+                    });
+
+                }
+            }
+            //5.总价跟着数量而改变
+            //5.1首先也是通过事件委托拿到数量
+            this.tBody.oninput = function (eve) {
+                var e = eve || window.event;
+                var tar = e.target || e.srcElement;
+                if (tar.className === "number") {
+                    //5.2.获取要修改数量的商品的id
+                    that.id = tar.parentNode.parentNode.getAttribute("index");
+                    // 5.3.执行修改本地存储中数据的功能
+                    that.changeData(function (i) {
+                        that.gm[i].num = tar.value;
+                    });
+                    //5.4每次修改数量时,来计算总价
+                    tar.parentNode.nextElementSibling.innerHTML = tar.value * tar.parentNode.previousElementSibling.innerHTML;
+                }
+            }
+        }
+        //4.4通过点击获取的商品的id来找到本地存储中对应商品
+        changeData(cb) {
+            // 根据点击的商品的id查找本地存储的数据中符合的商品数据
+            for (var i = 0; i < this.gm.length; i++) {
+                if (this.gm[i].goodsId === this.id) {
+                    cb(i);
+                    break;
+                }
+            }
+            // 剔除掉之后，得再存回去，否则仅仅是在内存中修改，没有修改本地存储
+            localStorage.setItem("goodsMsg", JSON.stringify(this.gm));
+        }
+
+
+    }
+    //4.先创建实例对象进行页面查看
+    var c = new Car();
+    c.getData();
+    c.addEvent();
+
+</script>
+<script src="./js/jquery1.12.4.min.js"></script>
+<script>
+    // 登录或注册成功进入购物车
+    if (localStorage.getItem('names')) {
+        // 如果本地存储有name属性，说明登录或注册过
+        $('h1').html(localStorage.getItem('names') + "的购物车")
+    }
+</script>
+
+</html>
